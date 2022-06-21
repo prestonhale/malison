@@ -1,3 +1,4 @@
+import 'package:piecemeal/piecemeal.dart';
 import 'char_code.dart';
 
 class Color {
@@ -83,33 +84,63 @@ class Color {
 }
 
 class Glyph {
-  /// The empty glyph: a clear glyph using the default background color
-  /// [Color.BLACK].
-  static const clear = Glyph.fromCharCode(CharCode.space);
-
-  final int char;
   final Color fore;
   final Color back;
 
-  Glyph(String char, [Color? fore, Color? back])
-      : char = char.codeUnits[0],
-        fore = fore != null ? fore : Color.white,
-        back = back != null ? back : Color.black;
-
-  const Glyph.fromCharCode(this.char, [Color? fore, Color? back])
+  const Glyph({Color? fore, Color? back})
       : fore = fore != null ? fore : Color.white,
         back = back != null ? back : Color.black;
+}
 
-  factory Glyph.fromDynamic(Object charOrCharCode, [Color? fore, Color? back]) {
-    if (charOrCharCode is String) return Glyph(charOrCharCode, fore, back);
-    return Glyph.fromCharCode(charOrCharCode as int, fore, back);
-  }
+// A [Glyph] that represents a colored symbol via utf-16 code point.
+class CharGlyph extends Glyph {
+  /// The empty glyph: a clear glyph using the default background color
+  /// [Color.BLACK].
+  static const clear = CharGlyph.fromCharCode(CharCode.space);
+
+  final int char;
+
+  CharGlyph(String char, [Color? fore, Color? back]) 
+  : char = char.codeUnits[0],
+    super(fore: fore, back: back);
+
+  const CharGlyph.fromCharCode(this.char, [Color? fore, Color? back])
+    : super(fore: fore, back: back);
 
   int get hashCode => char.hashCode ^ fore.hashCode ^ back.hashCode;
 
+  factory CharGlyph.fromDynamic(Object charOrCharCode,
+      [Color? fore, Color? back]) {
+    if (charOrCharCode is String) return CharGlyph(charOrCharCode, fore, back);
+    return CharGlyph.fromCharCode(charOrCharCode as int, fore, back);
+  }
+
   operator ==(Object other) {
-    if (other is Glyph) {
+    if (other is CharGlyph) {
       return char == other.char && fore == other.fore && back == other.back;
+    }
+
+    return false;
+  }
+}
+
+// A [Glyph] that represents a colored symbol based on its coordinates in an
+// image provided by the terminal used to render it.
+class VecGlyph extends Glyph {
+  final Vec vec;
+
+  VecGlyph(String char, [Color? fore, Color? back])
+      : vec = Vec(0, 0),
+        super(fore: fore, back: back);
+
+  const VecGlyph.fromVec(this.vec, [Color? fore, Color? back])
+    : super(fore: fore, back: back);
+
+  int get hashCode => vec.hashCode ^ fore.hashCode ^ back.hashCode;
+
+  operator ==(Object other) {
+    if (other is VecGlyph) {
+      return vec == other.vec && fore == other.fore && back == other.back;
     }
 
     return false;

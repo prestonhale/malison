@@ -55,7 +55,8 @@ class CanvasTerminal extends RenderableTerminal {
     _context.font = '${_font.size * _scale}px ${_font.family}, monospace';
 
     _display.render((x, y, glyph) {
-      var char = glyph.char;
+      var charGlyph = glyph as CharGlyph;
+      var char = charGlyph.char;
 
       // Fill the background.
       _context.fillStyle = glyph.back.cssColor;

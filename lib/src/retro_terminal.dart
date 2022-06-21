@@ -91,21 +91,30 @@ class RetroTerminal extends RenderableTerminal {
     if (!_imageLoaded) return;
 
     _display.render((x, y, glyph) {
-      var char = glyph.char;
+      int? sx;
+      int? sy;
+      if (glyph is CharGlyph) {
+        var char = glyph.char;
 
-      // Remap it if it's a Unicode character.
-      char = unicodeMap[char] ?? char;
+        // Remap it if it's a Unicode character.
+        char = unicodeMap[char] ?? char;
 
-      var sx = (char % 32) * _charWidth;
-      var sy = (char ~/ 32) * _charHeight;
+        sx = (char % 32) * _charWidth;
+        sy = (char ~/ 32) * _charHeight;
+      } else if (glyph is VecGlyph) {
+        sx = glyph.vec.x * _charWidth;
+        sy = glyph.vec.y * _charHeight;
+      }
+
+      if (sx == null || sy == null) {
+        // TODO: Give exception type
+        throw 'No coordinates provided for symbol to render.';
+      }
 
       // Fill the background.
       _context.fillStyle = glyph.back.cssColor;
       _context.fillRect(x * _charWidth * _scale, y * _charHeight * _scale,
           _charWidth * _scale, _charHeight * _scale);
-
-      // Don't bother drawing empty characters.
-      if (char == 0 || char == CharCode.space) return;
 
       var color = _getColorFont(glyph.fore);
       _context.imageSmoothingEnabled = false;

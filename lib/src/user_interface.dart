@@ -123,6 +123,7 @@ class UserInterface<T> {
     for (var i = 0; i < _screens.length; i++) {
       _screens[i].update();
     }
+    // dirty(); // For debugging
     if (_dirty) _render();
   }
 
@@ -205,7 +206,7 @@ class UserInterface<T> {
   void _tick(num time) {
     refresh();
 
-    if (_running) html.window.requestAnimationFrame(_tick);
+    if (_running) html.window.animationFrame.then(_tick);
   }
 
   void _render() {
@@ -299,5 +300,5 @@ class Screen<T> {
 
   /// Called when the [UserInterface] has been bound to a new terminal with a
   /// different size while this [Screen] is present.
-  void resize(Vec size) {}
+  void resize(Vec terminalSize) {}
 }
