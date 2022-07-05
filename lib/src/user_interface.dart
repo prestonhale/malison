@@ -116,12 +116,12 @@ class UserInterface<T> {
     _dirty = true;
   }
 
-  void refresh() {
+  void refresh(num time) {
     // Don't use a for-in loop here so that we don't run into concurrent
     // modification exceptions if a screen is added or removed during a call to
     // update().
     for (var i = 0; i < _screens.length; i++) {
-      _screens[i].update();
+      _screens[i].update(time);
     }
     // dirty(); // For debugging
     if (_dirty) _render();
@@ -204,7 +204,7 @@ class UserInterface<T> {
 
   /// Called every animation frame while the UI's game loop is running.
   void _tick(num time) {
-    refresh();
+    refresh(time);
 
     if (_running) html.window.animationFrame.then(_tick);
   }
@@ -294,7 +294,7 @@ class Screen<T> {
   /// will be passed to this as [result].
   void activate(Screen<T> popped, Object? result) {}
 
-  void update() {}
+  void update(num time) {}
 
   void render(Terminal terminal) {}
 

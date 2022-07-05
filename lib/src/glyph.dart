@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:piecemeal/piecemeal.dart';
 import 'char_code.dart';
 
@@ -83,13 +85,35 @@ class Color {
       blend(other, percentOther / 100);
 }
 
+class TriPhaseColor {
+  Color back;
+  Color fore;
+  Color complete;
+
+  static const defaultBack = Color.darkRed;
+  static const defaultFore = Color.red;
+  static const defaultComplete = Color.green;
+
+  TriPhaseColor({Color? back, Color? fore, Color? complete})
+      : fore = fore ?? defaultFore,
+        back = back ?? defaultBack,
+        complete = complete ?? defaultComplete;
+}
+
 class Glyph {
   final Color fore;
   final Color back;
 
+  static const defaultBack = Color.black;
+  static const defaultFore = Color.white;
+
   const Glyph({Color? fore, Color? back})
-      : fore = fore != null ? fore : Color.white,
-        back = back != null ? back : Color.black;
+      : fore = fore != null ? fore : defaultFore,
+        back = back != null ? back : defaultBack;
+
+  Glyph replaceBackground(Color newBack) {
+    return Glyph(back: newBack, fore: fore);
+  }
 }
 
 // A [Glyph] that represents a colored symbol via utf-16 code point.
@@ -100,12 +124,12 @@ class CharGlyph extends Glyph {
 
   final int char;
 
-  CharGlyph(String char, [Color? fore, Color? back]) 
-  : char = char.codeUnits[0],
-    super(fore: fore, back: back);
+  CharGlyph(String char, [Color? fore, Color? back])
+      : char = char.codeUnits[0],
+        super(fore: fore, back: back);
 
   const CharGlyph.fromCharCode(this.char, [Color? fore, Color? back])
-    : super(fore: fore, back: back);
+      : super(fore: fore, back: back);
 
   int get hashCode => char.hashCode ^ fore.hashCode ^ back.hashCode;
 
@@ -113,6 +137,11 @@ class CharGlyph extends Glyph {
       [Color? fore, Color? back]) {
     if (charOrCharCode is String) return CharGlyph(charOrCharCode, fore, back);
     return CharGlyph.fromCharCode(charOrCharCode as int, fore, back);
+  }
+
+  @override
+  CharGlyph replaceBackground(Color newBack) {
+    return CharGlyph.fromCharCode(char, fore, newBack);
   }
 
   operator ==(Object other) {
@@ -124,8 +153,8 @@ class CharGlyph extends Glyph {
   }
 }
 
-// A [Glyph] that represents a colored symbol based on its coordinates in an
-// image provided by the terminal used to render it.
+/// A [Glyph] that represents a colored symbol based on its coordinates in a
+/// tilesheet provided by the terminal used to render it.
 class VecGlyph extends Glyph {
   final Vec vec;
 
@@ -134,7 +163,12 @@ class VecGlyph extends Glyph {
         super(fore: fore, back: back);
 
   const VecGlyph.fromVec(this.vec, [Color? fore, Color? back])
-    : super(fore: fore, back: back);
+      : super(fore: fore, back: back);
+
+  @override
+  VecGlyph replaceBackground(Color newBack) {
+    return VecGlyph.fromVec(vec, fore, newBack);
+  }
 
   int get hashCode => vec.hashCode ^ fore.hashCode ^ back.hashCode;
 

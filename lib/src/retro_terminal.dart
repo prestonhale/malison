@@ -25,6 +25,10 @@ class RetroTerminal extends RenderableTerminal {
   /// The drawing scale, used to adapt to Retina displays.
   final int _scale;
 
+  /// The zoom applied to the terminal. Displays glyphs at [zoom] x their actual
+  /// pixel size. E.g. a 16x16 tilesheet will display tiles at 32x32.
+  final int _zoom;
+
   bool _imageLoaded = false;
 
   final int _charWidth;
@@ -51,8 +55,10 @@ class RetroTerminal extends RenderableTerminal {
       {html.CanvasElement? canvas,
       required int charWidth,
       required int charHeight,
-      int? scale}) {
+      int? scale,
+      int? zoom}) {
     scale ??= html.window.devicePixelRatio.toInt();
+    zoom ??= 1;
 
     // If not given a canvas, create one, automatically size it, and add it to
     // the page.
@@ -68,14 +74,17 @@ class RetroTerminal extends RenderableTerminal {
       html.document.body!.append(canvas);
     }
 
+    width = width ~/ zoom;
+    height = height ~/ zoom;
+
     var display = Display(width, height);
 
     return RetroTerminal._(display, charWidth, charHeight, canvas,
-        html.ImageElement(src: imageUrl), scale);
+        html.ImageElement(src: imageUrl), scale, zoom);
   }
 
   RetroTerminal._(this._display, this._charWidth, this._charHeight,
-      html.CanvasElement canvas, this._font, this._scale)
+      html.CanvasElement canvas, this._font, this._scale, this._zoom)
       : _context = canvas.context2D {
     _font.onLoad.listen((_) {
       _imageLoaded = true;
@@ -113,9 +122,13 @@ class RetroTerminal extends RenderableTerminal {
 
       // Fill the background.
       _context.fillStyle = glyph.back.cssColor;
-      _context.fillRect(x * _charWidth * _scale, y * _charHeight * _scale,
-          _charWidth * _scale, _charHeight * _scale);
+      _context.fillRect(
+          x * _charWidth * _scale * _zoom,
+          y * _charHeight * _scale * _zoom,
+          _charWidth * _scale * _zoom,
+          _charHeight * _scale * _zoom);
 
+      // File the foreground glyph.
       var color = _getColorFont(glyph.fore);
       _context.imageSmoothingEnabled = false;
       _context.drawImageScaledFromSource(
@@ -124,10 +137,10 @@ class RetroTerminal extends RenderableTerminal {
           sy,
           _charWidth,
           _charHeight,
-          x * _charWidth * _scale,
-          y * _charHeight * _scale,
-          _charWidth * _scale,
-          _charHeight * _scale);
+          x * _charWidth * _scale * _zoom,
+          y * _charHeight * _scale * _zoom,
+          _charWidth * _scale * _zoom,
+          _charHeight * _scale * _zoom);
     });
   }
 
